@@ -3923,7 +3923,7 @@ func (ic *indexClient) doDelete(op *gtm.Op) {
 			db_name := strings.Split(op.Namespace, ".")[0];
 			org_id := strings.Replace(db_name, "erxes_", "", -1);
 
-			_id := org_id + "_" + objectID
+			_id := org_id + "__" + objectID
 
 			termQuery := elastic.NewTermQuery("_id", _id)
 			search := ic.client.Search()

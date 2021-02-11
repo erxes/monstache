@@ -23,3 +23,10 @@ a `Session` field typed as a `*mgo.Session`.  Now that has been replaced with a 
 `*mongo.Client`. 
 
 See the MongoDB go driver docs for details on how to use this client.
+
+
+Update: 
+
+1. Change the code
+2. Run make release to generate build folder
+3. Push the code
