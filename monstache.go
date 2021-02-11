@@ -3920,10 +3920,10 @@ func (ic *indexClient) doDelete(op *gtm.Op) {
 		}
 	} else if ic.config.DeleteStrategy == statelessDeleteStrategy {
 		if routingNamespaces[""] || routingNamespaces[op.Namespace] {
-			fmt.Println("Namespace ============ ", op.Namespace)
-			fmt.Println("ObjectId ============ ", objectID)
+			db_name := strings.Split(op.Namespace, ".")[0];
+			org_id := strings.Replace(db_name, "erxes_", "", -1);
 
-			_id := op.Namespace + "_" + objectID
+			_id := org_id + "_" + objectID
 
 			termQuery := elastic.NewTermQuery("_id", _id)
 			search := ic.client.Search()
