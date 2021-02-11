@@ -3894,19 +3894,28 @@ func (ic *indexClient) doDelete(op *gtm.Op) {
 	if ic.config.DeleteStrategy == ignoreDeleteStrategy {
 		return
 	}
+
 	objectID, indexType, meta := opIDToString(op), ic.mapIndex(op), &indexingMeta{}
-	if objectID == "" {
+
+	db_name := strings.Split(op.Namespace, ".")[0];
+	org_id := strings.Replace(db_name, "erxes_", "", -1);
+	_id := org_id + "__" + objectID
+
+	if _id == "" {
 		errorLog.Println("Unable to delete document due to empty _id value")
 		return
 	}
-	req.Id(objectID)
+
+	req.Id(_id)
+
 	if ic.config.IndexAsUpdate == false {
 		req.Version(tsVersion(op.Timestamp))
 		req.VersionType("external")
 	}
+
 	if ic.config.DeleteStrategy == statefulDeleteStrategy {
 		if routingNamespaces[""] || routingNamespaces[op.Namespace] {
-			meta = ic.getIndexMeta(op.Namespace, objectID)
+			meta = ic.getIndexMeta(op.Namespace, _id)
 		}
 		req.Index(indexType.Index)
 		if meta.Index != "" {
@@ -3920,11 +3929,6 @@ func (ic *indexClient) doDelete(op *gtm.Op) {
 		}
 	} else if ic.config.DeleteStrategy == statelessDeleteStrategy {
 		if routingNamespaces[""] || routingNamespaces[op.Namespace] {
-			db_name := strings.Split(op.Namespace, ".")[0];
-			org_id := strings.Replace(db_name, "erxes_", "", -1);
-
-			_id := org_id + "__" + objectID
-
 			termQuery := elastic.NewTermQuery("_id", _id)
 			search := ic.client.Search()
 			search.FetchSource(false)
@@ -3934,7 +3938,7 @@ func (ic *indexClient) doDelete(op *gtm.Op) {
 			searchResult, err := search.Do(context.Background())
 			if err != nil {
 				errorLog.Printf("Unable to delete document %s: %s",
-					objectID, err)
+					_id, err)
 				return
 			}
 			if searchResult.Hits != nil && searchResult.TotalHits() == 1 {
@@ -3948,7 +3952,7 @@ func (ic *indexClient) doDelete(op *gtm.Op) {
 				}
 			} else {
 				errorLog.Printf("Failed to find unique document %s for deletion using index pattern %s",
-					objectID, ic.config.DeleteIndexPattern)
+					_id, ic.config.DeleteIndexPattern)
 				return
 			}
 		} else {
